@@ -1,4 +1,4 @@
-# NppFinder — Nextpad++ macOS Plugin
+# Finder — Nextpad++ macOS Plugin
 
 **Version:** 1.3.1 — see [CHANGELOG.md](CHANGELOG.md) for the version history.
 

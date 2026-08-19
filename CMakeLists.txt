@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
-project(NppFinder VERSION 1.3.1 LANGUAGES OBJCXX CXX)
+project(Finder VERSION 1.3.1 LANGUAGES OBJCXX CXX)
 
 # -----------------------------------------------------------------------------
-# Nextpad++ "NppFinder" plugin
+# Nextpad++ "Finder" plugin
 #
 # Ports the Windows npp-explorer-plugin concept (folder tree + file list
 # sidebar, Explorer/Finder integration) to the macOS host, using the
@@ -14,7 +14,7 @@ project(NppFinder VERSION 1.3.1 LANGUAGES OBJCXX CXX)
 # -----------------------------------------------------------------------------
 
 if(NOT APPLE)
-    message(FATAL_ERROR "The NppFinder plugin only builds on macOS (uses Cocoa/AppKit).")
+    message(FATAL_ERROR "The Finder plugin only builds on macOS (uses Cocoa/AppKit).")
 endif()
 
 set(CMAKE_AR /usr/bin/ar)
@@ -46,31 +46,31 @@ set(FINDER_HDRS
 # SHARED (not MODULE), matching every released Nextpad++ plugin: the host
 # dlopen()s it either way, but only an MH_DYLIB carries LC_ID_DYLIB, whose
 # current_version Plugins Admin reads to show the installed version.
-add_library(NppFinder SHARED ${FINDER_SRCS} ${FINDER_HDRS})
+add_library(Finder SHARED ${FINDER_SRCS} ${FINDER_HDRS})
 
-set_target_properties(NppFinder PROPERTIES
-    OUTPUT_NAME "NppFinder"
+set_target_properties(Finder PROPERTIES
+    OUTPUT_NAME "Finder"
     PREFIX ""
     SUFFIX ".dylib"
 )
 
-target_include_directories(NppFinder PRIVATE
+target_include_directories(Finder PRIVATE
     "${CMAKE_SOURCE_DIR}/vendor"
     "${CMAKE_SOURCE_DIR}/src"
 )
 
-target_compile_options(NppFinder PRIVATE -fobjc-arc -Wall -Wextra)
+target_compile_options(Finder PRIVATE -fobjc-arc -Wall -Wextra)
 
-target_link_libraries(NppFinder PRIVATE
+target_link_libraries(Finder PRIVATE
     "-framework Cocoa"
     "-framework Foundation"
 )
 
 # Stamp version into the dylib Mach-O current_version (Plugins Admin reads it).
-target_link_options(NppFinder PRIVATE "-Wl,-current_version,${PROJECT_VERSION}")
+target_link_options(Finder PRIVATE "-Wl,-current_version,${PROJECT_VERSION}")
 
 # Plugins are dlopen()'d, not linked against a fixed absolute path.
-set_target_properties(NppFinder PROPERTIES
+set_target_properties(Finder PROPERTIES
     LINK_FLAGS "-Wl,-undefined,dynamic_lookup"
 )
 
@@ -83,9 +83,9 @@ set_target_properties(NppFinder PROPERTIES
 set(NPP_PLUGINS_DIR "$ENV{HOME}/Library/Application Support/Nextpad++/plugins")
 
 add_custom_target(install_plugin
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${NPP_PLUGINS_DIR}/NppFinder"
-    COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:NppFinder>" "${NPP_PLUGINS_DIR}/NppFinder/NppFinder.dylib"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/resources" "${NPP_PLUGINS_DIR}/NppFinder/resources"
-    DEPENDS NppFinder
-    COMMENT "Installing NppFinder.dylib and toolbar icons into ${NPP_PLUGINS_DIR}/NppFinder/"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${NPP_PLUGINS_DIR}/Finder"
+    COMMAND ${CMAKE_COMMAND} -E copy "$<TARGET_FILE:Finder>" "${NPP_PLUGINS_DIR}/Finder/Finder.dylib"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/resources" "${NPP_PLUGINS_DIR}/Finder/resources"
+    DEPENDS Finder
+    COMMENT "Installing Finder.dylib and toolbar icons into ${NPP_PLUGINS_DIR}/Finder/"
 )

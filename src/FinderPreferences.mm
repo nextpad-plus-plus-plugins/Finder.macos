@@ -1,6 +1,6 @@
 #import "FinderPreferences.h"
 
-static NSString *const kPrefsFileName = @"nppfinder-prefs.json";
+static NSString *const kPrefsFileName = @"finder-plugin-prefs.json";
 static NSString *const kKeyLastRootPath = @"lastRootPath";
 static NSString *const kKeyFavoritePaths = @"favoritePaths";
 
@@ -59,7 +59,7 @@ static NSString *const kKeyFavoritePaths = @"favoritePaths";
     NSError *error = nil;
     id obj = [NSJSONSerialization JSONObjectWithData:data options:0 error:&error];
     if (![obj isKindOfClass:[NSDictionary class]]) {
-        NSLog(@"[NppFinder] Failed to parse prefs at %@: %@", path, error);
+        NSLog(@"[Finder] Failed to parse prefs at %@: %@", path, error);
         return;
     }
 
@@ -97,12 +97,12 @@ static NSString *const kKeyFavoritePaths = @"favoritePaths";
                                                      options:NSJSONWritingPrettyPrinted
                                                        error:&error];
     if (!data) {
-        NSLog(@"[NppFinder] Failed to serialize prefs: %@", error);
+        NSLog(@"[Finder] Failed to serialize prefs: %@", error);
         return;
     }
 
     if (![data writeToFile:path options:NSDataWritingAtomic error:&error]) {
-        NSLog(@"[NppFinder] Failed to write prefs to %@: %@", path, error);
+        NSLog(@"[Finder] Failed to write prefs to %@: %@", path, error);
     }
 }
 

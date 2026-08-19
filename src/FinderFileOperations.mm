@@ -23,7 +23,7 @@
     @try {
         [task launch];
     } @catch (NSException *ex) {
-        NSLog(@"[NppFinder] Failed to launch Terminal: %@", ex);
+        NSLog(@"[Finder] Failed to launch Terminal: %@", ex);
     }
 }
 

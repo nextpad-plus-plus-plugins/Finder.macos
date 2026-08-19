@@ -64,8 +64,8 @@ static FuncItem gFuncItems[FINDER_FUNC_COUNT];
 /// Localized menu item text, indexed the same way as gFuncItems.
 static NSString *LocalizedFuncItemName(int idx) {
     switch (idx) {
-        case 0: return FDLoc(@"NppFinder-Panel ein-/ausblenden", @"Toggle NppFinder Panel");
-        case 1: return FDLoc(@"Aktuelle Datei im NppFinder-Panel anzeigen", @"Locate Current File in NppFinder Panel");
+        case 0: return FDLoc(@"Finder-Panel ein-/ausblenden", @"Toggle Finder Panel");
+        case 1: return FDLoc(@"Aktuelle Datei im Finder-Panel anzeigen", @"Locate Current File in Finder Panel");
         case 2: return FDLoc(@"Aktuelle Datei im macOS Finder zeigen", @"Reveal Current File in macOS Finder");
         default: return @"";
     }
@@ -135,16 +135,16 @@ static NSMenuItem *FindMenuItemWithTag(NSMenu *menu, NSInteger tag) {
 
     uintptr_t handle = (uintptr_t)nppData._sendMessage(
         nppData._nppHandle, NPPM_DMM_REGISTERPANEL,
-        (uintptr_t)(__bridge void *)_panelView, (intptr_t)"NppFinder");
+        (uintptr_t)(__bridge void *)_panelView, (intptr_t)"Finder");
     _panelHandle = handle;
 
     // TEMP DIAGNOSTIC LOGGING — remove once panel visibility is confirmed
     // working end-to-end. Logs unconditionally (not just on failure) so we
     // can see in Console.app / stdout exactly what handle we got back.
-    NSLog(@"[NppFinder] ensurePanelCreated: REGISTERPANEL returned handle=%lu", (unsigned long)_panelHandle);
+    NSLog(@"[Finder] ensurePanelCreated: REGISTERPANEL returned handle=%lu", (unsigned long)_panelHandle);
 
     if (_panelHandle == 0) {
-        NSLog(@"[NppFinder] NPPM_DMM_REGISTERPANEL failed — host may predate panel docking support (< 1.0.3). Panel will not be available.");
+        NSLog(@"[Finder] NPPM_DMM_REGISTERPANEL failed — host may predate panel docking support (< 1.0.3). Panel will not be available.");
     }
 }
 
@@ -174,7 +174,7 @@ static NSMenuItem *FindMenuItemWithTag(NSMenu *menu, NSInteger tag) {
         // install, matching the Windows Explorer plugin's default-on
         // behavior. Users can hide it via the toggle menu command.
         intptr_t result = nppData._sendMessage(nppData._nppHandle, NPPM_DMM_SHOWPANEL, self->_panelHandle, 0);
-        NSLog(@"[NppFinder] handleReady: SHOWPANEL returned %ld", (long)result);
+        NSLog(@"[Finder] handleReady: SHOWPANEL returned %ld", (long)result);
         self->_panelVisible = (result != 0);
     });
 }
@@ -201,16 +201,16 @@ static NSMenuItem *FindMenuItemWithTag(NSMenu *menu, NSInteger tag) {
 
 - (void)togglePanel {
     [self ensurePanelCreated];
-    NSLog(@"[NppFinder] togglePanel: _panelHandle=%lu _panelVisible=%d", (unsigned long)_panelHandle, _panelVisible);
+    NSLog(@"[Finder] togglePanel: _panelHandle=%lu _panelVisible=%d", (unsigned long)_panelHandle, _panelVisible);
     if (!_panelHandle) return;
 
     intptr_t result;
     if (_panelVisible) {
         result = nppData._sendMessage(nppData._nppHandle, NPPM_DMM_HIDEPANEL, _panelHandle, 0);
-        NSLog(@"[NppFinder] togglePanel: HIDEPANEL returned %ld", (long)result);
+        NSLog(@"[Finder] togglePanel: HIDEPANEL returned %ld", (long)result);
     } else {
         result = nppData._sendMessage(nppData._nppHandle, NPPM_DMM_SHOWPANEL, _panelHandle, 0);
-        NSLog(@"[NppFinder] togglePanel: SHOWPANEL returned %ld", (long)result);
+        NSLog(@"[Finder] togglePanel: SHOWPANEL returned %ld", (long)result);
     }
     _panelVisible = !_panelVisible;
 }
@@ -285,7 +285,7 @@ NPP_EXPORT void setInfo(struct NppData data) {
 }
 
 NPP_EXPORT const char *getName(void) {
-    return "NppFinder";
+    return "Finder";
 }
 
 NPP_EXPORT struct FuncItem *getFuncsArray(int *nbF) {
