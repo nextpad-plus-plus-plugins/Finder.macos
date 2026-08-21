@@ -3,6 +3,7 @@
 static NSString *const kPrefsFileName = @"finder-plugin-prefs.json";
 static NSString *const kKeyLastRootPath = @"lastRootPath";
 static NSString *const kKeyFavoritePaths = @"favoritePaths";
+static NSString *const kKeyDidShowPanelOnFirstRun = @"didShowPanelOnFirstRun";
 
 @implementation FinderPreferences {
     NSString *_configDir;
@@ -10,6 +11,8 @@ static NSString *const kKeyFavoritePaths = @"favoritePaths";
     NSArray<NSString *> *_favoritePaths;
     BOOL _configured;
 }
+
+@synthesize didShowPanelOnFirstRun = _didShowPanelOnFirstRun;
 
 + (instancetype)shared {
     static FinderPreferences *sInstance = nil;
@@ -81,6 +84,11 @@ static NSString *const kKeyFavoritePaths = @"favoritePaths";
         }
         _favoritePaths = [cleaned copy];
     }
+
+    NSNumber *shown = dict[kKeyDidShowPanelOnFirstRun];
+    if ([shown isKindOfClass:[NSNumber class]]) {
+        _didShowPanelOnFirstRun = shown.boolValue;
+    }
 }
 
 - (void)save {
@@ -90,6 +98,7 @@ static NSString *const kKeyFavoritePaths = @"favoritePaths";
     NSDictionary *dict = @{
         kKeyLastRootPath: _lastRootPath ?: NSHomeDirectory(),
         kKeyFavoritePaths: _favoritePaths ?: @[],
+        kKeyDidShowPanelOnFirstRun: @(_didShowPanelOnFirstRun),
     };
 
     NSError *error = nil;

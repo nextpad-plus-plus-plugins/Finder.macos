@@ -326,6 +326,39 @@ typedef intptr_t           (*PMESSAGEPROC)(uint32_t, uintptr_t, intptr_t);
  * Returns 1 on success, 0 if the handle is invalid. */
 #define NPPM_DMM_UNREGISTERPANEL         (NPPMSG + 504)
 
+/* Declare restore metadata for a registered panel — OPTIONAL, the macOS
+ * analogue of the Windows tTbData fields pszModuleName + dlgID. A panel
+ * that declares this and is visible when Nextpad++ quits is re-opened
+ * automatically at the next launch (subject to the user's "Remember panel
+ * visibility" preference). A panel that never declares it simply isn't
+ * restored — identical to pre-1.1.0 behavior.
+ *
+ *   wParam — handle returned from NPPM_DMM_REGISTERPANEL.
+ *   lParam — const NppPanelInfo * (read only for the duration of the
+ *            call; the struct may live on the caller's stack).
+ *
+ * How restoration works, at the launch after a visible-at-quit: once all
+ * plugins are loaded and NPPN_READY has been broadcast, the host
+ *   1. does nothing if the panel is already visible (your plugin restored
+ *      it itself — e.g. from its own config),
+ *   2. otherwise INVOKES YOUR MENU COMMAND at cmdIndex — even when the
+ *      panel is registered but hidden, so the open happens through YOUR
+ *      code path and your internal state stays consistent. That command
+ *      must therefore be a plain "open/toggle the panel" action with no
+ *      other side effects (do NOT point it at a command that starts real
+ *      work). A direct host-side show is only the fallback when the
+ *      declared command can no longer be resolved.
+ *
+ * Returns 1 on success, 0 for an invalid handle — and 0 on hosts older
+ * than 1.1.0, which don't know this message; ignore the result and your
+ * plugin stays fully compatible with them. */
+typedef struct NppPanelInfo {
+    const char *moduleName;   /* your plugin's folder/module name, e.g. "Parakeet" */
+    int32_t     cmdIndex;     /* index into your FuncItem array of the command
+                                 that shows/toggles this panel (Windows dlgID) */
+} NppPanelInfo;
+#define NPPM_DMM_SETPANELINFO            (NPPMSG + 505)
+
 /* ── RUNCOMMAND_USER submessages ────────────────────────────────────────── */
 #define RUNCOMMAND_USER                  (WM_USER + 3000)
 #define NPPM_GETFULLCURRENTPATH          (RUNCOMMAND_USER + 1)

@@ -138,14 +138,22 @@ static NSMenuItem *FindMenuItemWithTag(NSMenu *menu, NSInteger tag) {
         (uintptr_t)(__bridge void *)_panelView, (intptr_t)"Finder");
     _panelHandle = handle;
 
-    // TEMP DIAGNOSTIC LOGGING — remove once panel visibility is confirmed
-    // working end-to-end. Logs unconditionally (not just on failure) so we
-    // can see in Console.app / stdout exactly what handle we got back.
-    NSLog(@"[Finder] ensurePanelCreated: REGISTERPANEL returned handle=%lu", (unsigned long)_panelHandle);
-
     if (_panelHandle == 0) {
         NSLog(@"[Finder] NPPM_DMM_REGISTERPANEL failed — host may predate panel docking support (< 1.0.3). Panel will not be available.");
+        return;
     }
+
+    // Declare restore metadata so the HOST remembers panel visibility across
+    // launches (NPPM_DMM_SETPANELINFO, host ≥ 1.1.0): if the panel was
+    // visible at quit, the host re-opens it by invoking our menu command at
+    // cmdIndex 0 — togglePanel, a plain toggle with no side effects, exactly
+    // what the restore contract requires. Older hosts return 0 and simply
+    // never restore; ignore the result either way.
+    NppPanelInfo info;
+    info.moduleName = "Finder";
+    info.cmdIndex   = 0;
+    nppData._sendMessage(nppData._nppHandle, NPPM_DMM_SETPANELINFO,
+                         _panelHandle, (intptr_t)&info);
 }
 
 - (void)handleReady {
@@ -163,6 +171,16 @@ static NSMenuItem *FindMenuItemWithTag(NSMenu *menu, NSInteger tag) {
 
     if (!_panelHandle) return;
 
+    // Force-show exactly ONCE, on the first launch after install, so the
+    // plugin is immediately useful (the Windows Explorer plugin's default-on
+    // behavior). Every later launch defers to the host's own panel restore
+    // (NPPM_DMM_SETPANELINFO above): visible at quit → the host re-opens it
+    // through togglePanel; hidden at quit → it stays hidden. The old
+    // unconditional show here was the "panel reappears on every relaunch"
+    // bug.
+    FinderPreferences *prefs = [FinderPreferences shared];
+    if (prefs.didShowPanelOnFirstRun) return;
+
     // Deferred by one runloop tick: NPPN_READY can fire before the main
     // window's split-view geometry has settled (first launch), which made
     // NPPM_DMM_SHOWPANEL "succeed" (return 1) while the panel ended up at
@@ -170,12 +188,11 @@ static NSMenuItem *FindMenuItemWithTag(NSMenu *menu, NSInteger tag) {
     // and only fixed itself once the user's own toggle click forced a fresh
     // layout pass. Waiting a tick avoids relying on that side effect.
     dispatch_async(dispatch_get_main_queue(), ^{
-        // Show by default so the plugin is immediately useful after
-        // install, matching the Windows Explorer plugin's default-on
-        // behavior. Users can hide it via the toggle menu command.
         intptr_t result = nppData._sendMessage(nppData._nppHandle, NPPM_DMM_SHOWPANEL, self->_panelHandle, 0);
-        NSLog(@"[Finder] handleReady: SHOWPANEL returned %ld", (long)result);
         self->_panelVisible = (result != 0);
+        FinderPreferences *p = [FinderPreferences shared];
+        p.didShowPanelOnFirstRun = YES;
+        [p save];
     });
 }
 
@@ -201,16 +218,12 @@ static NSMenuItem *FindMenuItemWithTag(NSMenu *menu, NSInteger tag) {
 
 - (void)togglePanel {
     [self ensurePanelCreated];
-    NSLog(@"[Finder] togglePanel: _panelHandle=%lu _panelVisible=%d", (unsigned long)_panelHandle, _panelVisible);
     if (!_panelHandle) return;
 
-    intptr_t result;
     if (_panelVisible) {
-        result = nppData._sendMessage(nppData._nppHandle, NPPM_DMM_HIDEPANEL, _panelHandle, 0);
-        NSLog(@"[Finder] togglePanel: HIDEPANEL returned %ld", (long)result);
+        nppData._sendMessage(nppData._nppHandle, NPPM_DMM_HIDEPANEL, _panelHandle, 0);
     } else {
-        result = nppData._sendMessage(nppData._nppHandle, NPPM_DMM_SHOWPANEL, _panelHandle, 0);
-        NSLog(@"[Finder] togglePanel: SHOWPANEL returned %ld", (long)result);
+        nppData._sendMessage(nppData._nppHandle, NPPM_DMM_SHOWPANEL, _panelHandle, 0);
     }
     _panelVisible = !_panelVisible;
 }

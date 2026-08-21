@@ -25,6 +25,12 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)addFavoritePath:(NSString *)path;
 - (void)removeFavoritePath:(NSString *)path;
 
+/// One-shot flag: the panel is force-shown exactly once, on the first launch
+/// after install (the "immediately useful" default-on). Every later launch
+/// defers to the host's own panel restore (NPPM_DMM_SETPANELINFO), which
+/// reopens the panel only if it was visible at quit.
+@property (nonatomic) BOOL didShowPanelOnFirstRun;
+
 /// Persists current values to disk immediately. Safe to call often; writes
 /// are cheap (small JSON file) and this plugin has no high-frequency callers.
 - (void)save;
